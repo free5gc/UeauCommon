@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"log"
 )
 
 const (
@@ -33,12 +34,20 @@ func KDFLen(input []byte) []byte {
 func GetKDFValue(key []byte, FC string, param ...[]byte) []byte {
 	kdf := hmac.New(sha256.New, key)
 
-	S, _ := hex.DecodeString(string(FC))
+	var S []byte
+	if STmp, err := hex.DecodeString(string(FC)); err != nil {
+		log.Printf("Hex decode failed: %+v", err)
+	} else {
+		S = STmp
+	}
+
 	for _, p := range param {
 		S = append(S, p...)
 	}
 
-	_, _ = kdf.Write(S)
+	if _, err := kdf.Write(S); err != nil {
+		log.Printf("KDF write failed: %+v", err)
+	}
 	sum := kdf.Sum(nil)
 	return sum
 }
